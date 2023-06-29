@@ -14,7 +14,7 @@ class UserService {
   static async signUp(data) {
     const { username, email, password, phone_number } = data;
     try {
-      const userExists = await UserModel.findOne({ email });
+      const userExists = await UserModel.findOne({ email: email });
       if (userExists)
         return {
           statusCode: 406,
@@ -64,11 +64,11 @@ class UserService {
   static async signIn(data) {
     const { email, password } = data;
     try {
-      const user = await UserModel.findOne({ email });
+      const user = await UserModel.findOne({ email: email });
       if (!user)
         return {
           statusCode: 404,
-          message: "user not found",
+          message: "email not registered",
         };
 
       const oldPassword = await HelperFunction.comparePassword(
@@ -94,8 +94,10 @@ class UserService {
       return {
         statusCode: 200,
         message: "logged in successfully",
-        data: user,
-        accessToken,
+        data: {
+          user,
+          accessToken,
+        },
       };
     } catch (err) {
       logger.error(`signIn -> Error : ${err.message}`);
@@ -141,16 +143,17 @@ class UserService {
         )} `
       );
 
+      const { password, isAdmin, isSuperAdmin, __v, ...others } = user._doc;
+
       return {
         statusCode: 200,
         message: "user updated successfully",
-        data: user,
+        data: others,
       };
     } catch (err) {
       logger.error(`updateUser -> Error : ${err.message}`);
     }
   }
-
   /**
    * @description - THIS ENDPOINT IS USED TO DELETE USER
    * @param {object} data - THE OBJECT DATA
@@ -182,27 +185,28 @@ class UserService {
    */
   static async get_all_user(req) {
     try {
+      // CREATE A QUERY OPTIONS
       const options = {
         page: req.query.page ? parseInt(req.query.page) : 1,
         limit: req.query.limit ? parseInt(req.query.limit) : 10,
         sort: { createdAt: -1 },
-        select: "-password -role -createdAt -updatedAt",
+        select: "-password",
       };
 
+      // CREATE A SEARCH BAR QUERY
       const search = req.query.search;
       const query = search
-        ? { username: { $regex: "search" }, $options: "i" }
+        ? { username: { $regex: search, $options: "i" } }
         : {};
       const result = await UserModel.paginate(query, options);
 
       // IF RESULT HAS NEXT PAGE
       const nextPage = result.hasNextPage
-        ? `${req.baseUrl}page=${req.nextPage} `
+        ? `${req.baseUrl}?page=${req.nextPage}`
         : null;
-
-      // IF RESULT HAS PREV PAGE
+      // IF RESULT HAS NEXT PAGE
       const prevPage = result.hasPrevPage
-        ? `${req.baseUrl}page=${req.nextPage} `
+        ? `${req.baseUrl}?page=${req.prevPage}`
         : null;
 
       return {
@@ -213,7 +217,7 @@ class UserService {
         prevPage,
       };
     } catch (err) {
-      logger.error(`get_all_user -> Error : ${err.message}`);
+      return logger.error(`get_all_user -> Error : ${err.message}`);
     }
   }
 
@@ -227,9 +231,9 @@ class UserService {
     try {
       const { id } = data;
 
-      const user = await UserModel.findOne({ id }).select(
-        "-role -password -createdAt -updatedAt"
-      );
+      HelperFunction.mongooseIdValidator(id);
+
+      const user = await UserModel.findById(id).select("-password");
       if (!user)
         return {
           statusCode: 404,
@@ -261,52 +265,50 @@ class UserService {
     try {
       const { _id } = req.user;
       const { id } = data;
-
+      // check for valid mongoose ID's
+      HelperFunction.mongooseIdValidator(_id);
       HelperFunction.mongooseIdValidator(id);
 
-      if (req.user._id === req.params.id)
-        return {
-          statusCode: 403,
-          message: "you can't follow yourself",
-        };
-
+      // get the user
       const user = await UserModel.findById(id);
+      // get the logged in user
+      const currentUser = await UserModel.findById(_id);
+
+      // if the user has not been followed
       if (!user)
         return {
           statusCode: 404,
-          message: "user does not exist",
+          message: "user does not exists",
         };
 
-      const currentUser = await UserModel.findById(_id);
+      if (!user.followers.includes(_id)) {
 
-      if (!user.followers.includes(currentUser)) {
-        await user.updateOne({
-          $push: { followers: currentUser },
-        });
-        await currentUser.updateOne({
-          $push: { following: user },
-        });
+        user.followers.push(_id);
+        user.followersCount += 1;
+        await user.save();
+        currentUser.following.push(user.id);
+        currentUser.followingCounts += 1;
+        await currentUser.save();
 
         logger.info(
-          `follow_a_user -> Info : user has been followed : ${JSON.stringify(
+          `UserService_follow_a_user -> Info : successfully followed this user : ${JSON.stringify(
             user.email
           )}`
         );
 
         return {
-          statusCode: 200,
-          message: "user has been followed",
-          data: user,
-          currentUser,
+          statusCode: 201,
+          message: "successfully followed this user",
         };
+
       } else {
         return {
           statusCode: 400,
-          message: "user already followed",
+          message: "You already follow this person.",
         };
       }
     } catch (err) {
-      logger.error(`follow_a_user -> Error : ${err.message}`);
+      logger.error(`UserService_follow_a_user -> Error : ${err.message}`);
     }
   }
 
@@ -321,42 +323,51 @@ class UserService {
     try {
       const { _id } = req.user;
       const { id } = data;
-
+      // check for valid mongoose ID's
+      HelperFunction.mongooseIdValidator(_id);
       HelperFunction.mongooseIdValidator(id);
 
-      if (req.user._id === req.params.id)
-        return {
-          statusCode: 403,
-          message: "you can't unfollow yourself",
-        };
-
+      // get the user
       const user = await UserModel.findById(id);
       if (!user)
         return {
           statusCode: 404,
-          message: "user does not exists ",
+          message: "user does not exists",
         };
 
       const currentUser = await UserModel.findById(_id);
 
-      if (user.followers.includes(currentUser)) {
-        await user.updateOne({ $pull: { followers: currentUser } });
-        await currentUser.updateOne({ $pull: { followings: user } });
+      if (user.followers.includes(_id)) {
+
+        user.followers.pull(_id);
+        user.followersCount -= 1;
+        await user.save();
+        currentUser.following.pull(user.id);
+        currentUser.followingCounts -= 1;
+        await currentUser.save();
+
+        logger.info(
+          `UserService_unfollow_a_user -> Info : successfully unfollowed this user : ${JSON.stringify(
+            user.email
+          )}`
+        );
 
         return {
-          statusCode: 200,
-          message: "user has been unfollowed",
+          statusCode: 201,
+          message: "successfully unfollowed this user",
         };
+
       } else {
         return {
-          statusCode: 406,
-          message: "user hasn't been followed",
+          statusCode: 400,
+          message: "You are not following this user.",
         };
       }
     } catch (err) {
-      logger.error(`unfollow_a_user -> Error : ${err.message}`);
+      logger.error(`UserService_unfollow_a_user -> Error : ${err.message}`);
     }
   }
 }
+
 
 export default UserService;
