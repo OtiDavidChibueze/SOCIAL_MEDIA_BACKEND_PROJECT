@@ -13,7 +13,8 @@ class Token {
   static async generateToken(user) {
     const payload = {
       userId: user.id,
-      role: user.role,
+      isAdmin: user.isAdmin,
+      isSuperAdmin : user.isSuperAdmin
     };
 
     const options = {
