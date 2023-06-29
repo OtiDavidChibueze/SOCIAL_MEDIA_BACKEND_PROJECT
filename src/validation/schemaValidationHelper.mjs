@@ -9,7 +9,7 @@ class SchemaValidation {
    * @returns - RETURNS A BOOLEAN
    * @memberof SchemaValidation
    */
-  static async validateInput(schema, object) {
+  static  validateInput(schema, object) {
     const { error, value } = schema.validate(object);
     return { error, value };
   }
@@ -20,7 +20,7 @@ class SchemaValidation {
    * @returns - RETURNS A JSON MESSAGE
    * @memberof SchemaValidation
    */
-  static async validateSchema(schema) {
+  static  validateSchema(schema) {
     return (req, res, next) => {
       const { error } = SchemaValidation.validateInput(schema, {
         ...req.body,
