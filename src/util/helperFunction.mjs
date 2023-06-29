@@ -1,7 +1,8 @@
 // SOCIAL MEDIA HELPER FUNCTION
 import ResponseHelper from "./responseHelper.mjs";
 import bcrypt from "bcrypt";
-import crypto from "crypto";
+import crypto from "crypto"
+import mongoose from 'mongoose'
 
 class HelperFunction {
   /**
@@ -50,6 +51,19 @@ class HelperFunction {
     this.passwordResetTokenExpiresAt = Date.now() + 10 * 60 * 1000;
     return resetToken;
   }
+
+  /**
+   * @description - THIS IS USED TO GENERATE A TOKEN
+   * @returns - RETURNS A TOKEN
+   */
+  static async generateResetToken() {
+    const resetToken = crypto.randomBytes(32).digest('hex');
+    this.passwordResetToken = crypto.createHash('SHA256').update(resetToken).digest('hex');
+    this.passwordResetTokenExpiresAt = Date.now() + 10 * 30 * 1000;
+    return resetToken
+  }
+
+
 }
 
 export default HelperFunction;
