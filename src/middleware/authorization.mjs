@@ -7,59 +7,39 @@ import logger from "../config/logger.mjs";
 // CONFIG
 const Authorization = (req, res, next) => {
   try {
-    const authHeader = req.headers.token;
-    const token = authHeader;
+    const authHeader = req.headers.authorization;
 
-    if (!token) return ResponseHelper.errorResponse(res, 404, "pls login");
-
-    if (token) {
-      jwt.verify(
-        token,
-        SECRET,
-        { algorithms: ["HS256"] },
-        async (err, decodedToken) => {
-          if (err) {
-            logger.info(err);
-
-            if (err.name == "TokenExpiredError") {
-              // USER MUST BE REDIRECTED TO THE LOGIN PAGE
-              return ResponseHelper.errorResponse(
-                res,
-                400,
-                "token expired pls re-login"
-              );
-            } else {
-              // TOKEN HAS ALREADY BEEN TEMPERED WITH
-              return ResponseHelper.errorResponse(res, 400, "invalid token");
-            }
-          } else {
-            logger.info(decodedToken);
-
-            req.user = {
-              _id: decodedToken.userId,
-              role: decodedToken.role,
-            };
-
-            if (
-              req.user.role === "user" ||
-              req.user.role === "isAdmin" ||
-              req.user.role === "isSuperAdmin"
-            ) {
-              return next();
-            } else {
-              return ResponseHelper.errorResponse(
-                res,
-                401,
-                "Unauthorized Access"
-              );
-            }
-          }
-        }
-      );
+    if (!authHeader) {
+      logger.error('Authorization -> Error: no token provided');
+      return ResponseHelper.errorResponse(res, 401, "Please login");
     }
+
+    // Extract the token from the Authorization header
+    const token = authHeader.split(" ")[1];
+
+    jwt.verify(token, SECRET, { algorithms: ["HS256"] }, async (err, decodedToken) => {
+      if (err) {
+        logger.error(err);
+
+        if (err.name === "TokenExpiredError") {
+          return ResponseHelper.errorResponse(res, 400, "Token expired. Please re-login");
+        } else {
+          return ResponseHelper.errorResponse(res, 400, "Invalid token");
+        }
+      } else {
+        logger.info(decodedToken);
+
+        req.user = {
+          _id: decodedToken.userId,
+          isAdmin: decodedToken.isAdmin,
+          isSuperAdmin: decodedToken.isSuperAdmin
+        };
+        next()
+      }
+    });
   } catch (err) {
-    logger.error(`Authorization -> Error : ${err.message}`);
-    return ResponseHelper.errorResponse(res, 500, "Oops something went wrong!");
+    logger.error(`Authorization -> Error: ${err.message}`);
+    return ResponseHelper.errorResponse(res, 500, "Oops, something went wrong!");
   }
 };
 
