@@ -1,15 +1,14 @@
-// LOGGER CONFIG
+// LOGGER CONFIGURATION
 import { createLogger, format, transports } from "winston";
 
 const logger = createLogger({
   format: format.combine(
     format.json(),
-    format.errors({ stack: true }),
-    format.timestamp({ format: "ddd , DD MMM YYYY HH:mm:ss [GTM]" }),
     format.splat(),
-
-    format.printf(({ level, message, timestamp }) => {
-      return `[${timestamp}] - [${level.toUpperCase()}] - ${message}`;
+    format.timestamp({ format: "ddd,DD MMM YYYY HH:mm:ss [GTM]" }),
+    format.errors({ stack: true }),
+    format.printf(({ timestamp, level, message }) => {
+      return `[${timestamp}] : [${level.toUpperCase()}] : ${message}`;
     })
   ),
 
@@ -17,12 +16,14 @@ const logger = createLogger({
     new transports.Console({
       format: format.combine(format.colorize(), format.simple()),
     }),
-    new transports.File({ filename: "appDevelopmentLog.log" }),
+
+    new transports.File({ filename: "appDevelopment.log" }),
   ],
 
   exceptionHandlers: [
-    new transports.File({ filename: "exceptionDevelopmentLog.log" }),
+    new transports.File({ filename: "exceptionDevelopment.log" }),
   ],
+
   exitOnError: false,
 });
 
