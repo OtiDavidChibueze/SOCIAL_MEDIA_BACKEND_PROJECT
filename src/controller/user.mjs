@@ -119,7 +119,11 @@ class UserController {
       );
     } catch (err) {
       logger.error(`updateUser -> Error : ${err.message}`);
-      return ResponseHelper(res, 500, "Oops something went wrong!");
+      return ResponseHelper.errorResponse(
+        res,
+        500,
+        "Oops something went wrong!"
+      );
     }
   }
 
@@ -132,12 +136,9 @@ class UserController {
    */
   static async deleteUser(req, res) {
     try {
-      if (req.user.role !== "isAdmin")
-        return ResponseHelper.errorResponse(res, 401, "Unauthorized Access");
-
       const data = req.params;
 
-      const result = await UserModel.deleteUser(data);
+      const result = await UserService.deleteUser(data);
 
       if (result.statusCode == 406)
         return ResponseHelper.errorResponse(
@@ -244,31 +245,36 @@ class UserController {
    */
   static async follow_a_user(req, res) {
     try {
-      const data = req.params;
+      if (req.user._id !== req.params.id) {
+        const data = req.params;
 
-      const result = await UserService.follow_a_user(data, req);
+        const result = await UserService.follow_a_user(data, req);
 
-      if (result.statusCode == 409)
-        return ResponseHelper.errorResponse(
+        if (result.statusCode == 409)
+          return ResponseHelper.errorResponse(
+            res,
+            result.statusCode,
+            result.message
+          );
+
+        logger.info(
+          "UserController_follow_a_user -> Info : user has been followed  "
+        );
+
+        return ResponseHelper.successResponse(
           res,
           result.statusCode,
           result.message
         );
-
-      logger.info(
-        `follow_a_user -> Info : user has been followed:  ${JSON.stringify(
-          result.data
-        )}`
-      );
-
-      return ResponseHelper.successResponse(
-        res,
-        result.statusCode,
-        result.message,
-        result.data
-      );
+      } else {
+        return ResponseHelper.errorResponse(
+          res,
+          401,
+          "you can't follow yourself"
+        );
+      }
     } catch (err) {
-      logger.error(`follow_a_user -> Error : ${err.message}`);
+      logger.error(`UserController_follow_a_user: Error : ${err.message}`);
       return ResponseHelper.errorResponse(
         res,
         500,
@@ -286,27 +292,37 @@ class UserController {
    */
   static async unfollow_a_user(req, res) {
     try {
-      const data = req.params;
+      if (req.user._id !== req.params.id) {
+        const data = req.params;
 
-      const result = await UserService.unfollow_a_user(data, req);
+        const result = await UserService.unfollow_a_user(data, req);
 
-      if (result.statusCode == 409)
-        return ResponseHelper.errorResponse(
+        if (result.statusCode == 409)
+          return ResponseHelper.errorResponse(
+            res,
+            result.statusCode,
+            result.message
+          );
+
+        logger.info(
+          "UserController_unfollow_a_user -> Info : user has been unfollowed  "
+        );
+
+        return ResponseHelper.successResponse(
           res,
           result.statusCode,
           result.message
         );
-
-      logger.info(`unfollow_a_user -> Info : user has been unfollowed)`);
-
-      return ResponseHelper.successResponse(
-        res,
-        result.statusCode,
-        result.message,
-        result.data
-      );
+      } else {
+        return ResponseHelper.errorResponse(
+          res,
+          400,
+          "you can't unfollow yourself"
+        );
+      }
     } catch (err) {
-      logger.error(`unfollow_a_user -> Error : ${err.message}`);
+      console.log('error', err)
+      logger.error(`UserController_unfollow_a_user: Error : ${err.message}`);
       return ResponseHelper.errorResponse(
         res,
         500,
