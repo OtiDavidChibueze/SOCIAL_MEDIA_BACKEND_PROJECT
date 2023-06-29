@@ -7,9 +7,9 @@ import logger from "./src/config/logger.mjs";
 // CONNECT TO DATABASE.....
 connectToDatabase();
 
-const port = PORT || 4000;
-
 // LISTEN TO.....
+const port = PORT || 6000;
+
 server.listen(port, () => {
   logger.info(`listening to port : ${port}`);
 });
