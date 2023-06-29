@@ -18,13 +18,22 @@ const UserSchema = mongoose.Schema(
       type: Array,
       default: [],
     },
+    followersCount: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
     following: {
       type: Array,
       default: [],
     },
-
-    phone_number: {
+    followingCounts: {
       type: Number,
+      default: 0,
+      min: 0
+    },
+    phone_number: {
+      type: String,
     },
     profile_pics: {
       type: String,
@@ -36,10 +45,13 @@ const UserSchema = mongoose.Schema(
       type: Array,
       default: [],
     },
-    role: {
-      type: String,
-      enum: ["user ", "isAdmin", "isSuperAdmin"],
-      default: "user",
+    isAdmin: {
+      type: Boolean,
+      default: false
+    },
+    isSuperAdmin: {
+      type: Boolean,
+      default: false
     },
     desc: {
       type: String,
