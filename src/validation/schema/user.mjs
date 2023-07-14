@@ -29,9 +29,7 @@ const signUp = joi.object(
     passwordResetToken: joi.string(),
     passwordResetTokenExpiresAt: joi.date(),
     passwordChangedAt: joi.date(),
-  },
-  { stripUnknown: true }
-);
+  })
 
 // UPDATE SCHEMA VALIDATION
 const updateUser = joi.object(
@@ -39,7 +37,7 @@ const updateUser = joi.object(
     username: joi.string().min(3).max(20),
     phone_number: joi.string()
       .regex(/^0[0-9]{10}$/)
-      .max(11),
+      .max(11).message({ 'string.empty': 'field is not allowed to be empty' }),
     profile_pics: joi.string(),
     cover_pics: joi.string(),
     desc: joi.string().max(50),
@@ -51,8 +49,16 @@ const updateUser = joi.object(
       "complicated",
       "engaged",
       "in a relationship").default('single'),
-  },
-  { stripUnknown: true }
-);
+  })
 
-export { signUp, updateUser };
+
+const newPassword = joi.object({
+  oldPassword: joi.string().required(),
+  newPassword: joi.string().required().min(6).message({ 'string.empty': 'please enter your new password' }),
+})
+
+const forgottenPassword = joi.object({
+  email: joi.string().email().required()
+})
+
+export { signUp, updateUser, newPassword, forgottenPassword };
