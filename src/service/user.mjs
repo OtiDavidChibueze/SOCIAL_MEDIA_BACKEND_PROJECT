@@ -451,7 +451,7 @@ class UserService {
    */
   static async get_all_admins_and_counts() {
     // getting the admins from the data base
-    const admins = await UserModel.find({ isAdmin: true });
+    const admins = await UserModel.find({ isAdmin: true }).select('-password');
 
     // getting the counts of the admins
     const counts = admins.length
@@ -481,7 +481,7 @@ class UserService {
    */
   static async get_all_superAdmins_and_counts() {
     // getting all user admins from the database
-    const superAdmins = await UserModel.find({ isSuperAdmin: true });
+    const superAdmins = await UserModel.find({ isSuperAdmin: true }).select('-password');
 
     // getting the super admins count
     const counts = superAdmins.length;
