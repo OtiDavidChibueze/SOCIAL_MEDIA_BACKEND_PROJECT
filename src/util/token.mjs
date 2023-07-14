@@ -14,7 +14,8 @@ class Token {
     const payload = {
       userId: user.id,
       isAdmin: user.isAdmin,
-      isSuperAdmin : user.isSuperAdmin
+      isSuperAdmin: user.isSuperAdmin,
+      isUser: user.isUser
     };
 
     const options = {
