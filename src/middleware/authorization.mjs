@@ -22,7 +22,8 @@ const Authorization = (req, res, next) => {
         logger.error(err);
 
         if (err.name === "TokenExpiredError") {
-          return ResponseHelper.errorResponse(res, 400, "Token expired. Please re-login");
+          logger.error(`Authorization -> Error : Token Expired`)
+          return ResponseHelper.errorResponse(res, 400, "Please re-login");
         } else {
           return ResponseHelper.errorResponse(res, 400, "Invalid token");
         }
@@ -32,7 +33,8 @@ const Authorization = (req, res, next) => {
         req.user = {
           _id: decodedToken.userId,
           isAdmin: decodedToken.isAdmin,
-          isSuperAdmin: decodedToken.isSuperAdmin
+          isSuperAdmin: decodedToken.isSuperAdmin,
+          isUser: decodedToken.isUser
         };
         next()
       }
