@@ -1,7 +1,6 @@
 // USER SCHEMA
 import mongoose from "mongoose";
-import mongoosePaginate from "mongoose-paginate-v2";
-
+import mongoosePaginate from 'mongoose-paginate-v2'
 const UserSchema = mongoose.Schema(
   {
     username: {
