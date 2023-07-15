@@ -308,7 +308,12 @@ class PostService {
     }
   }
 
-
+  /**
+   * @description - this endpoint is  used to comment to a users posts
+   * @param {object} data - the object data
+   * @returns - returns a json 
+   * @memberof PostService
+   */
   static async comment_to_a_post(data, req) {
 
     try {
