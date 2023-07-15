@@ -34,7 +34,6 @@ const Authorization = (req, res, next) => {
           _id: decodedToken.userId,
           isAdmin: decodedToken.isAdmin,
           isSuperAdmin: decodedToken.isSuperAdmin,
-          isUser: decodedToken.isUser
         };
         next()
       }

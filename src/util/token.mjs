@@ -15,7 +15,6 @@ class Token {
       userId: user.id,
       isAdmin: user.isAdmin,
       isSuperAdmin: user.isSuperAdmin,
-      isUser: user.isUser
     };
 
     const options = {

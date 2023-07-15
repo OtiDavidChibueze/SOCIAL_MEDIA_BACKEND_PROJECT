@@ -1,4 +1,4 @@
-// POST SCHEMA
+//* POST SCHEMA
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
 
@@ -12,6 +12,9 @@ const PostSchema = mongoose.Schema(
     },
     img: {
       type: String,
+    },
+    video: {
+      type: String
     },
     like: {
       type: Number,
@@ -41,13 +44,13 @@ const PostSchema = mongoose.Schema(
       },
     ],
   },
-  { timestamp: true }
+  { timestamps: true}
 );
 
-//PLUGIN PAGINATE
+//* PLUGIN PAGINATE
 PostSchema.plugin(mongoosePaginate);
 
-// CREATE A MODEL
+//*  CREATE A MODEL
 const PostModel = mongoose.model("Post", PostSchema);
 
 export default PostModel;

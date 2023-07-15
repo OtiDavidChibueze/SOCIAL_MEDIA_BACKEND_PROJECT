@@ -83,7 +83,7 @@ const UserSchema = mongoose.Schema(
       type: Date,
     },
   },
-  { timestamp: true }
+  { timestamps: true }
 );
 
 //PLUGIN PAGINATE
